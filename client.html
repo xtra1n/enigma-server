@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚙️ Enigma Machine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 2.5em;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+        }
+        
+        label {
+            display: inline-block;
+            width: 140px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        input, button {
+            padding: 10px 15px;
+            font-family: 'Courier New', monospace;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input {
+            width: 280px;
+            background: white;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+            font-weight: bold;
+            padding: 10px 25px;
+        }
+        
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        #output {
+            border: 2px solid #ddd;
+            padding: 20px;
+            margin-top: 30px;
+            height: 300px;
+            overflow-y: auto;
+            background: #fafafa;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+        
+        .log-line {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            line-height: 1.6;
+        }
+        
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .info {
+            color: #3498db;
+        }
+        
+        .warning {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        h3 {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .status-connected {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .status-disconnected {
+            background: #e74c3c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚙️ Enigma Machine</h1>
+        
+        <div id="status" class="status-badge status-disconnected">🔌 Disconnected</div>
+        
+        <div class="control-group">
+            <label for="rotors">Rotors:</label>
+            <input type="text" id="rotors" value="I II III" placeholder="I II III">
+            <button onclick="setRotors()">Set</button>
+        </div>
+
+        <div class="control-group">
+            <label for="positions">Positions:</label>
+            <input type="text" id="positions" value="AAA" placeholder="AAA">
+            <button onclick="setPositions()">Set</button>
+        </div>
+
+        <div class="control-group">
+            <label for="plugboard">Plugboard:</label>
+            <input type="text" id="plugboard" value="" placeholder="AB CD EF (optional)">
+            <button onclick="setPlugboard()">Set</button>
+        </div>
+
+        <div class="control-group">
+            <label for="text">Text:</label>
+            <input type="text" id="text" value="HELLO" placeholder="HELLO">
+            <button onclick="encrypt()">Encrypt</button>
+        </div>
+
+        <h3>📊 Log:</h3>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8080/ws');
+        const statusBadge = document.getElementById('status');
+
+        ws.onopen = () => {
+            statusBadge.textContent = '✅ Connected';
+            statusBadge.className = 'status-badge status-connected';
+            log('<span class="success">✓ Connected to Enigma Server</span>');
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                if (msg.status === 'ok') {
+                    if (msg.result) {
+                        log(`<span class="success">✓ Result:</span> <strong>${msg.result}</strong> | Pos: ${msg.pos}`);
+                    } else {
+                        log(`<span class="success">✓ OK</span> | Pos: ${msg.pos}`);
+                    }
+                } else {
+                    log(`<span class="error">✗ Error:</span> ${msg.error}`);
+                }
+            } catch (e) {
+                log(`<span class="error">✗ Parse error:</span> ${e.message}`);
+            }
+        };
+
+        ws.onerror = () => {
+            log(`<span class="error">✗ WebSocket error</span>`);
+        };
+
+        ws.onclose = () => {
+            statusBadge.textContent = '❌ Disconnected';
+            statusBadge.className = 'status-badge status-disconnected';
+            log('<span class="error">✗ Disconnected from server</span>');
+        };
+
+        function send(action, data) {
+            if (ws.readyState !== WebSocket.OPEN) {
+                log('<span class="error">✗ Not connected!</span>');
+                return;
+            }
+            const msg = { action, ...data };
+            log(`<span class="info">→</span> ${action}`);
+            ws.send(JSON.stringify(msg));
+        }
+
+        function setRotors() {
+            const rotors = document.getElementById('rotors').value.toUpperCase().split(/\s+/);
+            if (rotors.length !== 3) {
+                log('<span class="error">✗ Error: Need 3 rotors (I II III)</span>');
+                return;
+            }
+            send('set_rotors', { rotors });
+        }
+
+        function setPositions() {
+            const positions = document.getElementById('positions').value.toUpperCase();
+            if (positions.length !== 3) {
+                log('<span class="error">✗ Error: Need 3 positions (AAA, XYZ, etc)</span>');
+                return;
+            }
+            send('set_positions', { positions });
+        }
+
+        function setPlugboard() {
+            const plugboard = document.getElementById('plugboard').value.toUpperCase();
+            send('set_plugboard', { plugboard });
+        }
+
+        function encrypt() {
+            const text = document.getElementById('text').value.toUpperCase().replace(/[^A-Z]/g, '');
+            if (!text) {
+                log('<span class="error">✗ Error: No text to encrypt</span>');
+                return;
+            }
+            send('encrypt', { text });
+        }
+
+        function log(message) {
+            const output = document.getElementById('output');
+            const line = document.createElement('div');
+            line.className = 'log-line';
+            line.innerHTML = message;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        // Initial message
+        window.addEventListener('load', () => {
+            log('<span class="warning">⏳ Connecting to ws://localhost:8080/ws...</span>');
+        });
+    </script>
+</body>
+</html>
