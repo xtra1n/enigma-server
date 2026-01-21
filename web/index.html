@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎓 Enigma Machine</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Enigma Machine</h1>
+        
+        <div class="settings">
+            <div class="form-group">
+                <label>Позиция роторов:</label>
+                <input type="text" id="positions" value="AAA" maxlength="3" placeholder="AAA">
+                <button onclick="setPositions()">Установить</button>
+            </div>
+            
+            <div class="form-group">
+                <label>Коммутационная панель:</label>
+                <input type="text" id="plugboard" placeholder="AB CD EF">
+                <button onclick="setPlugboard()">Установить</button>
+            </div>
+        </div>
+        
+        <div class="cipher-box">
+            <label>Текст:</label>
+            <textarea id="text" placeholder="Введи текст"></textarea>
+            
+            <div class="buttons">
+                <button onclick="encrypt()" class="btn-primary">🔒 Шифровать</button>
+                <button onclick="decrypt()" class="btn-secondary">🔓 Расшифровать</button>
+            </div>
+            
+            <div class="result">
+                <strong>Результат:</strong> <span id="result">-</span>
+            </div>
+            <div class="position">
+                <strong>Позиция:</strong> <span id="position">-</span>
+            </div>
+        </div>
+        
+        <div id="log" class="log"></div>
+    </div>
+    
+    <script src="app.js"></script>
+</body>
+</html>
