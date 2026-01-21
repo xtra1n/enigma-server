@@ -1,11 +1,11 @@
 package api
 
 type Message struct {
-	Action    string    `json:"action"`
-	Rotors    [3]string `json:"rotors,omitempty"`
-	Positions string    `json:"positions,omitempty"`
-	Plugboard string    `json:"plugboard,omitempty"`
-	Text      string    `json:"text,omitempty"`
+	Action    string   `json:"action"`
+	Rotors    []string `json:"rotors,omitempty"`
+	Positions string   `json:"positions,omitempty"`
+	Plugboard string   `json:"plugboard,omitempty"`
+	Text      string   `json:"text,omitempty"`
 }
 
 type Response struct {

@@ -24,8 +24,11 @@ profile.cov
 go.work
 go.work.sum
 
+bin
+
 # env file
 .env
+test_*
 
 # Editor/IDE
 # .idea/

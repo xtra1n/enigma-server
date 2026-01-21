@@ -62,7 +62,13 @@ func (c *Client) readPump() {
 
 		switch msg.Action {
 		case "set_rotors":
-			if err := c.enigma.SetRotors(msg.Rotors); err != nil {
+			// Конвертируем слайс в массив [3]string
+			if len(msg.Rotors) != 3 {
+				c.SendError("Need exactly 3 rotors")
+				continue
+			}
+			rotorArray := [3]string{msg.Rotors[0], msg.Rotors[1], msg.Rotors[2]}
+			if err := c.enigma.SetRotors(rotorArray); err != nil {
 				c.SendError(err.Error())
 			} else {
 				c.SendOK()
@@ -80,7 +86,7 @@ func (c *Client) readPump() {
 				c.SendOK()
 			}
 		case "encrypt":
-			result := c.enigma.TranlateString(msg.Text)
+			result := c.enigma.TranslateString(msg.Text)
 			c.sendResult(result)
 		default:
 			c.SendError("Unknown action: " + msg.Action)
@@ -109,7 +115,7 @@ func (c *Client) writePump() {
 			}
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if err:= c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
 		}
@@ -118,7 +124,7 @@ func (c *Client) writePump() {
 
 func (c *Client) SendOK() {
 	resp := api.Response{
-		Status: "OK",
+		Status: "ok",
 		Pos:    c.enigma.GetPosition(),
 	}
 
@@ -132,13 +138,13 @@ func (c *Client) SendOK() {
 func (c *Client) SendError(errMsg string) {
 	resp := api.Response{
 		Status: "error",
-		Error:  errMsg}
+		Error:  errMsg,
+	}
 	data, _ := json.Marshal(resp)
 	select {
 	case c.send <- data:
 	default:
 	}
-
 }
 
 func (c *Client) sendResult(result string) {

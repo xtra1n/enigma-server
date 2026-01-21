@@ -1,9 +1,9 @@
 package enigma
 
 import (
+	"enigma-server/internal/config"
 	"fmt"
 	"strings"
-	"github.com/xtra1n/enigma-server/internal/config"
 )
 
 type Enigma struct {
@@ -130,16 +130,17 @@ func (e *Enigma) Translate(ch rune) rune {
 	return result
 }
 
-func (e *Enigma) TranlateString(text string) string {
+func (e *Enigma) TranslateString(text string) string {
 	text = strings.ToUpper(text)
 
 	var result string
 
 	for _, ch := range text {
+		// ❌ УДАЛИЛ: e.rotateRotors() - это вызовется внутри Translate()
 		result += string(e.Translate(ch))
 	}
 
-	return  result
+	return result
 }
 
 func (e *Enigma) GetPosition() string {
@@ -149,5 +150,5 @@ func (e *Enigma) GetPosition() string {
 		pos += string(rune('A' + r.pos))
 	}
 
-	return  pos
+	return pos
 }
