@@ -136,7 +136,6 @@ func (e *Enigma) TranslateString(text string) string {
 	var result string
 
 	for _, ch := range text {
-		// ❌ УДАЛИЛ: e.rotateRotors() - это вызовется внутри Translate()
 		result += string(e.Translate(ch))
 	}
 
