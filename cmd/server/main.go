@@ -15,7 +15,6 @@ func main() {
 	hub := ws.NewHub()
 	go hub.Run()
 
-	// Служи статические файлы из web/
 	fs := http.FileServer(http.Dir("web"))
 	http.Handle("/", fs)
 
